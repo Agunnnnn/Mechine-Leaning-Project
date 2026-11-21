@@ -1,0 +1,72 @@
+# --- Virtual Environment ---
+venv/
+.venv/
+env/
+ENV/
+venv/
+**/venv/
+__pycache__/
+**/__pycache__/
+venv/
+__pycache__/
+# --- Python Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# --- Jupyter Notebook ---
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# --- Dataset (Sesuaikan nama folder datamu) ---
+data/
+dataset/
+datasets/
+*.csv
+*.tsv
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.sqlite
+*.db
+# Pengecualian: kalau ada file CSV kecil yang memang ingin di-push (misal sample)
+# !data/sample_data.csv
+
+# --- Saved Models & Weights ---
+models/
+checkpoints/
+*.pkl
+*.pickle
+*.joblib
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.pb
+*.safetensors
+
+# --- Experiment Tracking & Logs ---
+logs/
+*.log
+mlruns/
+wandb/
+runs/
+catboost_info/
+
+# --- Secrets & Environment Variables ---
+.env
+.env.local
+*.pem
+*.key
+kaggle.json
+
+# --- OS & IDE Files ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+!student-*.csv
