@@ -81,7 +81,7 @@ else:
 st.sidebar.title("📊 Analisis & Pemodelan")
 menu = st.sidebar.selectbox(
     "Pilih Menu",
-    ["Beranda", "Dataset", "Statistik", "Visualisasi", "Grafik", "Pemodelan Machine Learning"]
+    ["Beranda", "Dataset", "Statistik", "Visualisasi", "Grafik", "Pemodelan Machine Learning", "🔮 Prediksi Siswa Baru"]
 )
 
 # --------------------------------------------------
@@ -311,3 +311,134 @@ elif menu == "Pemodelan Machine Learning":
             ax.set_xlabel("Prediksi")
             ax.set_ylabel("Aktual")
             st.pyplot(fig)
+
+# --------------------------------------------------
+# Halaman Prediksi Siswa Baru
+# --------------------------------------------------
+elif menu == "🔮 Prediksi Siswa Baru":
+    st.title("🔮 Prediksi Predikat Nilai Akademik Siswa Baru")
+    st.write("Masukkan data siswa di bawah ini, lalu klik **Prediksi** untuk mendapatkan predikat nilai akademik.")
+
+    if "predikat" not in df_active.columns:
+        st.warning("Dataset aktif tidak memiliki kolom 'predikat'. Gunakan dataset Student Performance.")
+    else:
+        # ----- Form Input -----
+        st.subheader("📝 Data Siswa")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            school    = st.selectbox("Sekolah (school)", ["GP", "MS"])
+            sex       = st.selectbox("Jenis Kelamin (sex)", ["F", "M"])
+            age       = st.slider("Usia (age)", 15, 22, 17)
+            address   = st.selectbox("Alamat (address)", ["U", "R"], help="U=Urban, R=Rural")
+            famsize   = st.selectbox("Ukuran Keluarga (famsize)", ["GT3", "LE3"], help="GT3 = >3 orang, LE3 = ≤3 orang")
+            Pstatus   = st.selectbox("Status Orang Tua (Pstatus)", ["T", "A"], help="T=Tinggal bersama, A=Terpisah")
+            Medu      = st.slider("Pendidikan Ibu (Medu) 0-4", 0, 4, 2)
+            Fedu      = st.slider("Pendidikan Ayah (Fedu) 0-4", 0, 4, 2)
+            Mjob      = st.selectbox("Pekerjaan Ibu (Mjob)", ["teacher", "health", "services", "at_home", "other"])
+            Fjob      = st.selectbox("Pekerjaan Ayah (Fjob)", ["teacher", "health", "services", "at_home", "other"])
+
+        with col2:
+            reason    = st.selectbox("Alasan Memilih Sekolah (reason)", ["home", "reputation", "course", "other"])
+            guardian  = st.selectbox("Wali (guardian)", ["mother", "father", "other"])
+            traveltime= st.slider("Waktu Perjalanan ke Sekolah (traveltime) 1-4", 1, 4, 1, help="1=<15 menit, 4=>1 jam")
+            studytime = st.slider("Waktu Belajar per Minggu (studytime) 1-4", 1, 4, 2, help="1=<2 jam, 4=>10 jam")
+            failures  = st.slider("Jumlah Kegagalan Kelas (failures)", 0, 4, 0)
+            schoolsup = st.selectbox("Dukungan Belajar Sekolah (schoolsup)", ["yes", "no"])
+            famsup    = st.selectbox("Dukungan Belajar Keluarga (famsup)", ["yes", "no"])
+            paid      = st.selectbox("Les Berbayar (paid)", ["yes", "no"])
+            activities= st.selectbox("Kegiatan Ekstrakurikuler (activities)", ["yes", "no"])
+            nursery   = st.selectbox("Pernah TK (nursery)", ["yes", "no"])
+
+        with col3:
+            higher    = st.selectbox("Ingin Kuliah (higher)", ["yes", "no"])
+            internet  = st.selectbox("Punya Internet di Rumah (internet)", ["yes", "no"])
+            romantic  = st.selectbox("Punya Pacar (romantic)", ["yes", "no"])
+            famrel    = st.slider("Kualitas Hubungan Keluarga (famrel) 1-5", 1, 5, 4)
+            freetime  = st.slider("Waktu Luang Setelah Sekolah (freetime) 1-5", 1, 5, 3)
+            goout     = st.slider("Frekuensi Keluar Bersama Teman (goout) 1-5", 1, 5, 3)
+            Dalc      = st.slider("Konsumsi Alkohol Hari Kerja (Dalc) 1-5", 1, 5, 1)
+            Walc      = st.slider("Konsumsi Alkohol Akhir Pekan (Walc) 1-5", 1, 5, 1)
+            health    = st.slider("Status Kesehatan (health) 1-5", 1, 5, 5)
+            absences  = st.slider("Jumlah Absensi (absences)", 0, 93, 0)
+            mapel     = st.selectbox("Mata Pelajaran (mapel)", sorted(df_active["mapel"].unique().tolist()) if "mapel" in df_active.columns else ["math", "por"])
+
+        st.divider()
+
+        if st.button("🔮 Prediksi Sekarang", use_container_width=True):
+            # Susun input sebagai DataFrame dengan kolom yang sama persis dengan X training
+            input_data = pd.DataFrame([{
+                "school": school, "sex": sex, "age": age, "address": address,
+                "famsize": famsize, "Pstatus": Pstatus, "Medu": Medu, "Fedu": Fedu,
+                "Mjob": Mjob, "Fjob": Fjob, "reason": reason, "guardian": guardian,
+                "traveltime": traveltime, "studytime": studytime, "failures": failures,
+                "schoolsup": schoolsup, "famsup": famsup, "paid": paid,
+                "activities": activities, "nursery": nursery, "higher": higher,
+                "internet": internet, "romantic": romantic, "famrel": famrel,
+                "freetime": freetime, "goout": goout, "Dalc": Dalc, "Walc": Walc,
+                "health": health, "absences": absences, "mapel": mapel
+            }])
+
+            # Latih ulang model menggunakan seluruh dataset aktif
+            X_train_full = df_active.drop(columns=[c for c in ["G1", "G2", "G3", "predikat"] if c in df_active.columns])
+            y_train_full = df_active["predikat"]
+
+            num_cols_pred = X_train_full.select_dtypes(include=["int64", "float64"]).columns.tolist()
+            cat_cols_pred = X_train_full.select_dtypes(include=["object", "category"]).columns.tolist()
+
+            preprocessor_pred = ColumnTransformer(
+                transformers=[
+                    ("num", StandardScaler(), num_cols_pred),
+                    ("cat", OneHotEncoder(drop="first", handle_unknown="ignore"), cat_cols_pred)
+                ]
+            )
+
+            X_processed_full = preprocessor_pred.fit_transform(X_train_full)
+
+            n_comp = min(10, X_processed_full.shape[1])
+            pca_pred = PCA(n_components=n_comp)
+            X_pca_full = pca_pred.fit_transform(X_processed_full)
+
+            rf_pred = RandomForestClassifier(n_estimators=100, random_state=42)
+            rf_pred.fit(X_pca_full, y_train_full)
+
+            # Transform data input
+            # Pastikan kolom input sama dengan training
+            for col in X_train_full.columns:
+                if col not in input_data.columns:
+                    input_data[col] = X_train_full[col].mode()[0]
+            input_data = input_data[X_train_full.columns]
+
+            X_input_processed = preprocessor_pred.transform(input_data)
+            X_input_pca = pca_pred.transform(X_input_processed)
+
+            hasil = rf_pred.predict(X_input_pca)[0]
+            proba = rf_pred.predict_proba(X_input_pca)[0]
+            kelas = rf_pred.classes_
+
+            # Tampilkan hasil
+            warna_map = {
+                "A (Sangat Baik)": "🟢",
+                "B (Baik)": "🔵",
+                "C (Cukup)": "🟡",
+                "D (Kurang)": "🟠",
+                "E (Gagal)": "🔴"
+            }
+            ikon = warna_map.get(hasil, "⚪")
+
+            st.success(f"### {ikon} Predikat Prediksi: **{hasil}**")
+
+            st.subheader("📊 Probabilitas per Predikat")
+            proba_df = pd.DataFrame({
+                "Predikat": kelas,
+                "Probabilitas (%)": (proba * 100).round(2)
+            }).sort_values("Probabilitas (%)", ascending=False)
+
+            fig_p, ax_p = plt.subplots(figsize=(8, 3))
+            sns.barplot(data=proba_df, x="Predikat", y="Probabilitas (%)", palette="viridis", ax=ax_p)
+            ax_p.set_title("Probabilitas Prediksi per Predikat")
+            ax_p.set_ylabel("Probabilitas (%)")
+            ax_p.bar_label(ax_p.containers[0], fmt="%.1f%%", padding=3)
+            st.pyplot(fig_p)
+            st.dataframe(proba_df, use_container_width=True, hide_index=True)
